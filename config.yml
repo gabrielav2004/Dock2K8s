@@ -1,0 +1,51 @@
+# Dock2K8s Configuration
+# Converts Docker Compose to Kubernetes manifests
+
+# Global defaults for all workloads
+defaults:
+  replicas: 1
+  controller: Deployment  # Deployment or StatefulSet
+
+# Output and input settings
+output_dir: k8s
+docker_compose_file: docker-compose.yml
+
+# Logging and output
+verbose: false
+format: yaml  # yaml or json
+
+# Volume conversion settings
+convert_volumes: true
+pvc_storage_class: null  # null = cluster default, or "fast-ssd", "standard", etc.
+pvc_size: 10Gi
+
+# Dependency handling
+handle_depends_on: true
+init_container_image: busybox:1.35
+
+# Build handling
+warn_on_build: true
+
+# ============================================================================
+# WORKLOADS - Pod/Deployment configuration (mirrors docker-compose structure)
+# ============================================================================
+workloads:
+  elasticsearch:
+    replicas: 1
+    controller: Deployment
+  
+  kibana:
+    replicas: 1
+    controller: Deployment
+
+# ============================================================================
+# SERVICES - Kubernetes Service configuration (separate from workloads)
+# ============================================================================
+services:
+  elasticsearch:
+    enabled: true
+    type: ClusterIP
+  
+  kibana:
+    enabled: true
+    type: ClusterIP
