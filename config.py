@@ -16,7 +16,8 @@ DEFAULT_CONFIG = {
     "init_container_image": "busybox:1.35",
     "warn_on_build": True,
     "workloads": {},
-    "services": {}
+    "services": {},
+    "secrets": {}
 }
 
 def load_config(config_path):
@@ -62,6 +63,7 @@ def merge_configs(cli_args, config_file=None):
         # Extract workloads and services sections
         workloads = file_config.pop("workloads", {})
         services = file_config.pop("services", {})
+        secrets = file_config.pop("secrets", {})
         
         # Merge rest of config file
         config.update({k: v for k, v in file_config.items() if v is not None})
@@ -71,6 +73,8 @@ def merge_configs(cli_args, config_file=None):
             config["workloads"] = workloads
         if services:
             config["services"] = services
+        if secrets:
+            config["secrets"] = secrets
     
     # Merge CLI args (only non-None values override)
     if cli_args:
@@ -101,6 +105,13 @@ def get_service_config(name, config, key, default=None):
            .get(name, {})
            .get(key, default)
     )
+
+def get_secrets_config(config):
+    """
+    Get secrets configuration from config.
+    Returns dict of all secrets defined in config
+    """
+    return config.get("secrets", {})
 
 # Kept for backward compatibility
 def resolve(service, cfg, key, default=None):
