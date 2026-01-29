@@ -15,29 +15,37 @@ python run_ui.py
 
 ## Features
 
+- **Jupyter-Style File Browser**: Browse filesystem and discover projects
+- **Project Detection**: Folders with `docker-compose.yml` are highlighted as projects
 - **Dual Graph Views**: Toggle between Compose (services + dependencies) and K8s (generated resources)
-- **Project Explorer**: Browse files and services
 - **Properties Panel**: Edit service configurations
 - **Live Preview**: Preview generated YAML before conversion
 - **One-Click Conversion**: Generate Kubernetes manifests
 
 ## Usage
 
-1. **Navigate to project** - UI auto-detects project root (looks for `docker-compose.yml`)
+### 1. Select a Project
 
-2. **Select view mode** - Use sidebar toggle:
-   - **Compose**: Shows services from `docker-compose.yml` with `depends_on` relationships
-   - **K8s**: Shows generated Kubernetes resources (requires conversion first)
+When you open the UI, you'll see the **Project Browser** (Jupyter-style):
 
-3. **Edit configuration**:
-   - Click a service in sidebar
-   - Edit workload settings (replicas, controller type)
-   - Edit Kubernetes Service settings (enabled, type)
-   - Click "Save Configuration" to update `config.yml`
+- Browse your filesystem using the file tree
+- Folders containing `docker-compose.yml` are highlighted in green with a "Project" badge
+- Click **"Open"** on a project folder to work with it
+- Use navigation buttons: Home, Up, Refresh
 
-4. **Convert**:
-   - Click "Preview YAML" to see generated manifests
-   - Click "Run Conversion" to generate Kubernetes manifests
+### 2. Work with Your Project
+
+Once a project is open, you'll see the main UI with:
+
+- **Sidebar**: Toggle between Compose/K8s views, list services
+- **Graph View**: Visualize service relationships
+- **Properties Panel**: Edit service configurations
+- **Action Buttons**: Convert, Preview YAML
+
+### 3. Switch Projects
+
+- Click **"Change Project"** in the header to return to the file browser
+- Select a different project folder
 
 ## Graph Views
 
@@ -55,6 +63,14 @@ python run_ui.py
 
 ## API Endpoints
 
+**File Browser:**
+- `GET /api/browse?path=...` - Browse directory contents
+- `GET /api/browse/parent?path=...` - Get parent directory
+- `GET /api/browse/home` - Get home directory path
+- `GET /api/workspace` - Get current workspace info
+- `POST /api/workspace?path=...` - Set current workspace
+
+**Project Data:**
 - `GET /api/ir` - Get intermediate representation
 - `GET /api/project` - Get project files
 - `GET /api/k8s/resources` - Get parsed K8s resources

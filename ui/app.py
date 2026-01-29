@@ -16,11 +16,11 @@ from nicegui import app, ui
 # Import UI modules - try absolute first (when run directly), then relative (when run as module)
 try:
     from ui.api import router as api_router
-    from ui.components import UIManager, create_layout
+    from ui.components import UIManager, create_layout, create_home_page
 except ImportError:
     try:
         from .api import router as api_router
-        from .components import UIManager, create_layout
+        from .components import UIManager, create_layout, create_home_page
     except ImportError as e:
         raise ImportError(
             f"Failed to import UI modules. Make sure you're running from project root. Error: {e}"
@@ -29,10 +29,31 @@ except ImportError:
 
 def init_ui(fastapi_app: FastAPI):
     """Initialize NiceGUI UI and mount it to FastAPI app"""
+    
     @ui.page("/")
-    async def main_page():
-        """Main UI page"""
+    async def landing_page():
+        """Landing page with modern home page design"""
         ui_manager = UIManager()
+        
+        def on_project_open():
+            ui.navigate.to("/project")
+        
+        # Use the new create_home_page function
+        create_home_page(ui_manager, on_project_open)
+    
+    @ui.page("/project")
+    async def project_page():
+        """Main project UI page"""
+        ui_manager = UIManager()
+        
+        # Check if we have a valid workspace
+        workspace = await ui_manager.get_workspace()
+        
+        if not workspace or not workspace.get("has_compose"):
+            # Redirect to landing page if no project
+            ui.navigate.to("/")
+            return
+        
         create_layout(ui_manager)
     
     # Mount NiceGUI to FastAPI app

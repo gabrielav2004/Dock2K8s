@@ -76,3 +76,22 @@ class K8sResource(BaseModel):
     namespace: Optional[str] = None
     file: Optional[str] = None
     selector_app: Optional[str] = None
+
+
+class BrowseEntry(BaseModel):
+    """File/folder entry for the file browser"""
+    name: str
+    path: str
+    is_dir: bool
+    size: Optional[int] = None
+    is_project: bool = False  # True if folder contains docker-compose.yml
+    modified: Optional[str] = None
+
+
+class WorkspaceInfo(BaseModel):
+    """Current workspace information"""
+    path: str
+    name: str
+    has_compose: bool
+    has_config: bool
+    has_output: bool
