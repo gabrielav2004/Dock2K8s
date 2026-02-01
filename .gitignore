@@ -26,20 +26,26 @@ var/
 # Virtual environments
 .venv/
 venv/
+*_venv/
+.*_venv/
 ENV/
 env/
 
 # IDEs
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Env files
+# Env files (DO NOT COMMIT SECRETS!)
 .env
 .env.*
+!.env.example
 
 # Logs
 *.log
@@ -50,5 +56,34 @@ node_modules/
 # Docker-compose override files
 docker-compose.override.yml
 
-# Optional: ignore generated k8s manifests if you don't want them in git
+# ============================================================================
+# GENERATED KUBERNETES MANIFESTS - Exclude from version control
+# ============================================================================
+# Generated manifests should be created fresh from source
+k8s/
+manifests/
+*.yaml
+*.yml
+
+# If you want to commit manifests, comment out above and manage manually
 # k8s/
+# manifests/
+
+# Temporary files
+.temp/
+tmp/
+*.tmp
+
+# IDE-specific
+.vscode/settings.json
+.idea/workspace.xml
+
+# macOS
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Windows
+$RECYCLE.BIN/
+

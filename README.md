@@ -31,6 +31,11 @@ A command-line tool that automatically converts Docker Compose configurations in
 - Handle service dependencies
 - Control build warnings
 
+✅ **Secrets Management**
+- Generate Kubernetes Secrets from `.env` files
+- Support for multiple secret types (Opaque, TLS, docker-registry)
+- Secure secret creation workflow (not hardcoded in manifests)
+
 ## Installation
 
 ### Requirements
@@ -1214,6 +1219,120 @@ ports:
   - "8080"
 ```
 
+## Secrets Management
+
+Dock2K8s supports automatic Kubernetes Secret generation from `.env` files. This provides a secure way to manage sensitive data like database passwords, API keys, and tokens.
+
+### Quick Start with Secrets
+
+1. **Create `.env` file** (or copy `.env.example`):
+```bash
+DATABASE_PASSWORD=postgres123
+API_KEY=sk_live_1234567890abcdef
+JWT_SECRET=your-secret-key-here
+```
+
+2. **Configure in `config.yml`**:
+```yaml
+secrets:
+  app-secrets:
+    enabled: true
+    type: Opaque
+    data:
+      DATABASE_PASSWORD: null    # null = read from .env
+      API_KEY: null
+      JWT_SECRET: null
+```
+
+3. **Run conversion**:
+```bash
+python cli.py
+```
+
+Output: `k8s/app-secrets-secret.yaml` (with base64-encoded values)
+
+### Using Secrets in Deployments
+
+Once the Secret is created, use it in your pods:
+
+```bash
+# Create the secret in Kubernetes
+kubectl apply -f k8s/app-secrets-secret.yaml
+
+# Or create from .env directly (recommended for production)
+kubectl create secret generic app-secrets --from-env-file=.env
+```
+
+Then reference it in your deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        image: myapp/api:1.0
+        envFrom:
+        - secretRef:
+            name: app-secrets  # Reference by name
+```
+
+### Security Best Practices
+
+⚠️ **Important:** The generated Secret YAML contains base64-encoded values (not encrypted). For production:
+
+1. **Never commit `.env` files to git** (add to `.gitignore`)
+2. **Never commit Secret YAML files** with real values
+3. **Create secrets via `kubectl` or external secret managers:**
+   ```bash
+   # Recommended: Create from .env
+   kubectl create secret generic app-secrets --from-env-file=.env
+   
+   # Or use a secret manager
+   kubectl apply -f secret-from-vault.yaml
+   ```
+
+### Supported Secret Types
+
+- `Opaque` (default) - Generic key-value secrets
+- `kubernetes.io/dockercfg` - Docker registry credentials
+- `kubernetes.io/dockerconfigjson` - Docker registry config
+- `kubernetes.io/basic-auth` - Username/password
+- `kubernetes.io/ssh-auth` - SSH private key
+- `kubernetes.io/tls` - TLS certificate + key
+
+### Multiple Secrets Example
+
+```yaml
+secrets:
+  # Database credentials
+  db-credentials:
+    enabled: true
+    type: Opaque
+    data:
+      DATABASE_PASSWORD: null
+      DATABASE_USER: null
+  
+  # API keys
+  api-keys:
+    enabled: true
+    type: Opaque
+    data:
+      STRIPE_KEY: null
+      JWT_SECRET: null
+  
+  # Docker registry
+  docker-registry:
+    enabled: true
+    type: kubernetes.io/dockerconfigjson
+    data:
+      .dockerconfigjson: null
+```
+
 ## Future Enhancements
 
 - [ ] Volume → PersistentVolumeClaim conversion
@@ -1224,14 +1343,46 @@ ports:
 - [ ] Manifest validation
 - [ ] Helm chart generation
 
+## Implementation Status
+
+### ✅ Completed Features
+
+- [x] **Basic Conversion** - Docker Compose → Kubernetes Deployments/StatefulSets
+- [x] **Service Discovery** - Generate Kubernetes Service objects
+- [x] **Volume Handling** - Convert volumes to PersistentVolumeClaims
+- [x] **CLI Parameters** - Flexible command-line arguments
+- [x] **Configuration File** - config.yml with defaults, workloads, services sections
+- [x] **Environment Variables** - Handle both dict and list formats from docker-compose
+- [x] **Dependency Management** - Init containers for depends_on handling
+- [x] **Secrets Generation** - Parse .env files and create Kubernetes Secrets
+- [x] **Multiple Secret Types** - Opaque, docker-registry, TLS, basic-auth, etc.
+- [x] **Build Warnings** - Alert on unsupported docker-compose features
+- [x] **Output Formats** - YAML and JSON manifest generation
+- [x] **Documentation** - Comprehensive README, CLI-REFERENCE, CONFIG-REFERENCE, TESTING guide
+
+### 🚧 Planned Features
+
+- [ ] **Ingress** - HTTP routing and TLS termination
+- [ ] **Resource Limits** - CPU and memory constraints per workload
+- [ ] **Health Checks** - Map Docker healthchecks to K8s readiness/liveness probes
+- [ ] **ConfigMaps** - Generate ConfigMaps for application configuration
+- [ ] **Advanced Secrets** - Vault/AWS Secrets Manager integration
+- [ ] **Helm Chart Generation** - Package manifests as Helm charts
+- [ ] **Web UI** - Visual configuration builder
+- [ ] **Manifest Validation** - Pre-deployment validation and checks
+- [ ] **Namespace Management** - Multi-namespace support
+- [ ] **RBAC** - ServiceAccount and Role definitions
+
 ## License
 
 MIT
 
 ## Contributing
 
-Contributions welcome! Areas for improvement:
-- Volume conversion
-- Dependency handling
-- More comprehensive error messages
-- Unit tests
+Contributions welcome! Priority areas:
+- Ingress support
+- Resource limits and constraints
+- Health check mapping
+- ConfigMap support
+- Additional test coverage
+- Performance optimizations

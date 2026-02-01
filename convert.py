@@ -3,7 +3,9 @@ import json
 from pathlib import Path
 from generators.controller import controller
 from generators.service import service
-from config import get_workload_config, get_service_config
+from generators.secret import secret
+from config import get_workload_config, get_service_config, get_secrets_config
+from env_loader import load_env_file
 
 def load(path):
     with open(path) as f:
@@ -54,6 +56,24 @@ def convert(project_root, config=None):
         print(f"⚙️  Config: config.yml")
         print(f"📦 Output: {out}")
         print()
+    
+    # Load environment variables for secrets
+    env_vars = {}
+    env_file = project_root / ".env"
+    if env_file.exists():
+        env_vars = load_env_file(env_file)
+        if verbose and env_vars:
+            print(f"📋 Loaded {len(env_vars)} env vars from .env")
+    
+    # Generate secrets if configured
+    secrets_config = get_secrets_config(config)
+    if secrets_config:
+        for secret_name, secret_cfg in secrets_config.items():
+            secret_obj = secret(secret_name, secret_cfg, env_vars)
+            if secret_obj:
+                secret_path = out / f"{secret_name}-secret.yaml"
+                write(secret_obj, secret_path, output_format)
+                print(f"✔ {secret_name} → Secret")
     
     # Convert each service
     for name, svc in compose.get("services", {}).items():

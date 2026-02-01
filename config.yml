@@ -49,3 +49,15 @@ services:
   kibana:
     enabled: true
     type: ClusterIP
+
+# ============================================================================
+# SECRETS - Kubernetes Secret configuration (from .env or manual)
+# ============================================================================
+secrets:
+  app-secrets:
+    enabled: true
+    type: Opaque
+    data:
+      DATABASE_PASSWORD: null  # null = read from .env, or specify manually
+      API_KEY: null
+      JWT_SECRET: null
